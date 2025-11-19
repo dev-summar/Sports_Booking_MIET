@@ -1,7 +1,3 @@
-Here is your **fully polished, production-ready GitHub-style `README.md`** for the MIET Sports Booking System — clean, professional, and ready to publish.
-
----
-
 # **MIET Sports Booking System**
 
 A comprehensive and user-friendly web application designed to streamline sports court bookings at **Model Institute of Engineering & Technology (MIET), Jammu**.
