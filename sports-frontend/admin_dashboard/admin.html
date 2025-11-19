@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIET Sports Admin Dashboard</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- SheetJS (for Excel export) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- Authentication Check - Must run before page renders -->
+  <script>
+    // Immediate authentication check - runs before body renders
+    if (!localStorage.getItem("admintoken")) {
+      window.location.replace("./admin_login.html");
+    }
+  </script>
+</head>
+
+<body class="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+
+    <!-- Left Section: Logo + Title -->
+    <div class="flex items-center gap-3">
+      <img src="../assets/miet-logo.png" alt="MIET Logo" class="h-10 w-auto object-contain" />
+      
+      <div>
+        <p class="text-sm font-semibold tracking-wide text-gray-900 leading-tight">
+          Model Institute of Engineering & Technology
+        </p>
+        <p class="text-xs text-gray-500 leading-tight">
+          Sports Booking • Admin Panel
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Section: Simple Admin Navigation -->
+    <nav class="hidden md:flex items-center gap-6 text-sm">
+      <a href="./admin.html" class="text-blue-700 font-semibold">Dashboard</a>
+      <button onclick="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors duration-200">
+        Logout
+      </button>
+    </nav>
+    
+    <!-- Mobile Logout Button -->
+    <div class="md:hidden">
+      <button onclick="logout()" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors duration-200">
+        Logout
+      </button>
+    </div>
+
+  </div>
+</header>
+
+  <!-- MAIN -->
+  <main class="flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      
+
+      <!-- BOX 1: Pending Requests -->
+      <section class="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-900">Pending Requests</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Requests awaiting admin approval or rejection.
+        </p>
+
+        <!-- Legends -->
+        <div class="flex gap-6 mt-4 text-sm items-center">
+          <span class="flex items-center gap-2 text-gray-700">
+            <span class="w-3 h-3 bg-yellow-400 rounded-full"></span> Pending
+          </span>
+          <span class="flex items-center gap-2 text-gray-700">
+            <span class="w-3 h-3 bg-green-500 rounded-full"></span> Approved
+          </span>
+          <span class="flex items-center gap-2 text-gray-700">
+            <span class="w-3 h-3 bg-red-500 rounded-full"></span> Rejected
+          </span>
+        </div>
+
+        <!-- PENDING REQUEST LIST -->
+        <div id="pendingRequestsContainer" class="mt-5 space-y-3"></div>
+      </section>
+       
+      
+
+      <!-- BOX 2: Filter + Bookings Overview -->
+       <!-- BOX 2: Booking Overview -->
+    <section class="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
+
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">Booking Overview</h2>
+          <p class="text-sm text-gray-500 mt-1">Filter bookings and take action.</p>
+        </div>
+
+        <!-- ✅ Download Excel Button -->
+        <button id="downloadExcelBtn"
+          class="px-4 py-2 rounded-full border border-green-600 text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 flex items-center gap-2">
+          📥 Download Approved (Excel)
+        </button>
+      </div>
+        <!-- Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+          <div>
+            <label class="text-xs font-semibold">Filter by Date</label>
+            <input type="date" id="filterDate"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold">Filter by Court</label>
+            <select id="filterCourt"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+              <option value="all">All Courts</option>
+            </select>
+          </div>
+        </div>
+        
+
+
+        <!-- LIST OF BOOKINGS -->
+        <div id="bookingContainer" class="mt-6 space-y-5"></div>
+
+        <!-- Empty template -->
+        <template id="emptyStateTemplate">
+          <div class="bg-gray-50 border border-gray-200 rounded-xl py-8 px-4 text-center text-gray-500">
+            <p class="text-sm font-semibold mb-1">No bookings found</p>
+            <p class="text-xs">Try changing the date or court filter.</p>
+          </div>
+        </template>
+
+      </section>
+
+      <!-- BOX 3: Block Slot -->
+      <section class="bg-white border border-gray-200 rounded-2xl p-6">
+
+        <h2 class="text-lg font-bold text-gray-900">Block a Slot (Admin)</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Block a specific slot for maintenance or faculty usage.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="text-xs font-semibold">Court</label>
+            <select id="blockCourt" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white">
+              <option value="">Select Court</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold">Date</label>
+            <input type="date" id="blockDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold">Slot</label>
+            <select id="blockSlot" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white">
+              <option value="">Select Slot</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="blockBtn"
+          class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm">
+          ⛔ Block This Slot
+        </button>
+
+        <p id="blockMessage" class="text-xs mt-2 text-gray-600"></p>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="./admin.js"></script>
+
+</body>
+</html>
