@@ -400,7 +400,7 @@ async function downloadApprovedBookings() {
 function logout() {
   if (confirm("Are you sure you want to logout?")) {
     localStorage.removeItem("admintoken");
-    window.location.replace("./admin_login.html");
+    window.location.replace("./index.html");
   }
 }
 
