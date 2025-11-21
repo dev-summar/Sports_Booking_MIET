@@ -244,6 +244,19 @@
       </p>
     </div>
   </footer>
+<script>
+  window.onload = function () {
+    const dateInput = document.getElementById("dateInput");
+    if (!dateInput) return;
+
+    const today = new Date();
+    const next7 = new Date();
+    next7.setDate(today.getDate() + 7);
+
+    dateInput.min = today.toISOString().split("T")[0];
+    dateInput.max = next7.toISOString().split("T")[0];
+  };
+</script>
 
   <!-- Logic -->
    <script src="config.js"></script>
