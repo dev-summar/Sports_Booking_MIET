@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5000/api";
+// Use API URL from config.js
+const API_URL = window._env_.API_URL;
 
 // All 30-minute slots
 const slots = [
@@ -78,16 +79,18 @@ bookingForm.addEventListener("submit", async (e) => {
         return;
     }
 
-    // Show message IMMEDIATELY when submit is clicked
+    // Show message immediately
     responseMsg.innerHTML = "⏳ Processing your booking...";
     responseMsg.className = "text-center text-sm font-semibold mt-4 text-blue-600";
     responseMsg.style.display = "block";
 
-    // Disable submit button immediately
+    // Disable submit button
     const submitBtn = bookingForm.querySelector("button[type='submit']");
+    let originalText = "";
+    
     if (submitBtn) {
         submitBtn.disabled = true;
-        const originalText = submitBtn.innerHTML;
+        originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = "Booking... ⏳";
     }
 
@@ -109,17 +112,17 @@ bookingForm.addEventListener("submit", async (e) => {
             body: JSON.stringify(bookingData)
         });
 
-        // Update message to success
+        // Success message
         responseMsg.innerHTML = "🎉 Booking Successful! Wait for admin approval.";
         responseMsg.className = "text-center text-sm font-semibold mt-4 text-green-600";
 
         loadBookedSlots();
     } catch (error) {
-        // Update message to error
+        // Error message
         responseMsg.innerHTML = "❌ Booking failed. Please try again.";
         responseMsg.className = "text-center text-sm font-semibold mt-4 text-red-600";
     } finally {
-        // Re-enable button
+        // Restore button
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText || "Confirm Booking ⚽";

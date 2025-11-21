@@ -2,8 +2,7 @@ if (!localStorage.getItem("admintoken")) {
   window.location.href = "./admin_login.html";
 }
 
-const API_URL = "http://localhost:5000/api";
-
+const API_URL = window._env_.API_URL;   // <-- NOW READS FROM config.js
 
 const filterDate = document.getElementById("filterDate");
 const filterCourt = document.getElementById("filterCourt");
@@ -111,9 +110,6 @@ function updateBlockSlotOptions() {
 /* ------------------------------
    RENDER BOOKINGS
 ---------------------------------- */
-/* ------------------------------
-   RENDER BOOKINGS
----------------------------------- */
 function renderBookings() {
   bookingContainer.innerHTML = "";
 
@@ -187,7 +183,6 @@ function renderBookings() {
           row.className =
             "flex items-center justify-between px-3 py-2 border-b last:border-0";
 
-          // 🔥 TEAM MEMBERS LINE (if exists)
           let teamHTML = "";
           if (b.teamMembers && b.teamMembers.trim() !== "") {
             teamHTML = `
@@ -233,9 +228,9 @@ function renderBookings() {
       dateCard.appendChild(body);
       bookingContainer.appendChild(dateCard);
       renderPendingRequests();
-
     });
 }
+
 function renderPendingRequests() {
   const container = document.getElementById("pendingRequestsContainer");
   if (!container) return;
@@ -243,8 +238,6 @@ function renderPendingRequests() {
   container.innerHTML = "";
 
   const pending = allBookings.filter(b => b.status === "pending");
-
-  console.log("PENDING REQUESTS FOUND:", pending); // DEBUG LINE
 
   if (pending.length === 0) {
     container.innerHTML = `
@@ -284,13 +277,11 @@ function renderPendingRequests() {
   });
 }
 
-
 /* ------------------------------
    UPDATE STATUS
 ---------------------------------- */
 async function updateBookingStatus(id, action, buttonElement) {
   try {
-    // Show immediate feedback
     const button = buttonElement || document.querySelector(`button[onclick*="${id}"][onclick*="${action}"]`);
     const originalText = button ? button.textContent : '';
     
@@ -307,20 +298,12 @@ async function updateBookingStatus(id, action, buttonElement) {
       throw new Error(`Failed to ${action} booking`);
     }
 
-    // Reload bookings immediately
     await loadBookings();
     renderBookings();
     renderPendingRequests();
     
-    // Show success message
-    const actionText = action === 'approve' ? 'approved' : 'rejected';
-    console.log(`✅ Booking ${actionText} successfully`);
-    
   } catch (error) {
-    console.error(`Error ${action}ing booking:`, error);
     alert(`Failed to ${action} booking. Please try again.`);
-    
-    // Restore button on error
     if (button) {
       button.disabled = false;
       button.textContent = originalText;
@@ -376,12 +359,13 @@ refreshBtn?.addEventListener("click", async () => {
   renderBookings();
   renderPendingRequests();
 });
+
 document.getElementById("downloadExcelBtn")?.addEventListener("click", downloadApprovedBookings);
+
 /* ------------------------------
    DOWNLOAD APPROVED BOOKINGS (EXCEL)
 ---------------------------------- */
 async function downloadApprovedBookings() {
-  // Fetch fresh data directly from backend (IGNORES old allBookings memory)
   const res = await fetch(`${API_URL}/bookings`);
   const data = await res.json();
 
@@ -410,7 +394,6 @@ async function downloadApprovedBookings() {
   XLSX.writeFile(workbook, "approved_bookings.xlsx");
 }
 
-
 /* ------------------------------
    LOGOUT FUNCTION
 ---------------------------------- */
@@ -437,13 +420,10 @@ async function autoRefreshBookings() {
     renderBookings();
     renderPendingRequests();
     
-    // Check if new pending requests arrived (compare by ID to avoid false positives)
     const currentPending = allBookings.filter(b => b.status === "pending");
     const newPendingCount = currentPending.filter(b => !previousBookingIds.has(b._id.toString())).length;
     
-    // Only show notification if not first load and there are new bookings
     if (newPendingCount > 0 && !isFirstLoad) {
-      // New booking arrived - show notification
       showNewBookingNotification(newPendingCount);
     }
     
@@ -455,7 +435,6 @@ async function autoRefreshBookings() {
 }
 
 function showNewBookingNotification(count) {
-  // Create or update notification
   let notification = document.getElementById("newBookingNotification");
   
   if (!notification) {
@@ -468,7 +447,6 @@ function showNewBookingNotification(count) {
     `;
     document.body.appendChild(notification);
     
-    // Auto-hide after 5 seconds
     setTimeout(() => {
       if (notification) {
         notification.style.opacity = "0";
@@ -477,13 +455,11 @@ function showNewBookingNotification(count) {
       }
     }, 5000);
   } else {
-    // Update existing notification
     notification.querySelector("span:last-child").textContent = `${count} new booking request${count > 1 ? 's' : ''}!`;
   }
 }
 
 function startAutoRefresh() {
-  // Refresh every 30 seconds
   refreshInterval = setInterval(autoRefreshBookings, 30000);
 }
 
@@ -500,21 +476,18 @@ function stopAutoRefresh() {
 (async function init() {
   filterDate.value = new Date().toISOString().slice(0, 10);
 
-  await loadCourts();      // load courts first
-  await loadBookings();    // then load bookings (fills allBookings)
+  await loadCourts();      
+  await loadBookings();    
 
-  renderPendingRequests(); // now safe to render pending
+  renderPendingRequests(); 
   
-  // Start auto-refresh
   lastBookingCount = allBookings.length;
   startAutoRefresh();
   
-  // Stop auto-refresh when page is hidden (tab switch)
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       stopAutoRefresh();
     } else {
-      // Refresh immediately when tab becomes visible
       autoRefreshBookings();
       startAutoRefresh();
     }
