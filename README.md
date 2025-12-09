@@ -172,61 +172,6 @@ Open directly in your browser:
 
 ---
 
-## 📡 **API Documentation**
-
-### **Base URL**
-
-```
-http://localhost:5000/api
-```
-
-### **Admin Authentication**
-
-#### **POST /api/admin/login**
-
-Logs in an admin & returns JWT token.
-
----
-
-### **Courts API**
-
-#### **GET /api/courts**
-
-Fetch all courts.
-
-#### **POST /api/courts/add**
-
-Add a new court.
-
----
-
-### **Bookings API**
-
-#### **POST /api/bookings/add**
-
-Create new booking.
-
-#### **GET /api/bookings**
-
-Fetch all bookings.
-
-#### **GET /api/bookings/check-slots**
-
-Check available slots for a court.
-
-#### **PUT /api/bookings/:id/approve**
-
-Approve booking.
-
-#### **PUT /api/bookings/:id/reject**
-
-Reject booking.
-
-#### **DELETE /api/bookings/:id**
-
-Delete booking.
-
----
 
 ## 🔐 **Authentication System**
 
@@ -258,44 +203,7 @@ Delete booking.
 
 ---
 
-## 🗄️ **Database Models**
 
-### **Admin**
-
-```js
-{
-  email: String,
-  password: String
-}
-```
-
-### **Court**
-
-```js
-{
-  name: String,
-  type: String,
-  active: Boolean
-}
-```
-
-### **Booking**
-
-```js
-{
-  studentName,
-  studentEmail,
-  courtId,
-  date,
-  startTime,
-  teamMembers,
-  status,
-  createdAt,
-  updatedAt
-}
-```
-
----
 
 ## 🕒 **Available Time Slots**
 
