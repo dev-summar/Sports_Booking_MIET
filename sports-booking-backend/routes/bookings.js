@@ -13,6 +13,34 @@ const {
 // ===============================
 router.post("/add", async (req, res) => {
   try {
+    // Validate 6-hour same-day booking restriction
+    const { date, startTime } = req.body;
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+    
+    if (date === todayStr) {
+      // Parse slot time (format: "HH:MM")
+      const [slotHours, slotMinutes] = startTime.split(":").map(Number);
+      
+      // Create date object for the slot time today
+      const slotDateTime = new Date();
+      slotDateTime.setHours(slotHours, slotMinutes, 0, 0);
+      
+      // Current time
+      const currentTime = new Date();
+      
+      // Calculate difference in milliseconds
+      const diffMs = slotDateTime - currentTime;
+      const diffHours = diffMs / (1000 * 60 * 60);
+      
+      // Slot must be at least 6 hours ahead
+      if (diffHours < 6) {
+        return res.status(400).json({ 
+          error: "Same-day bookings must be made at least 6 hours in advance" 
+        });
+      }
+    }
+
     const booking = await Booking.create(req.body);
     console.log("NEW BOOKING CREATED:", booking);
 
