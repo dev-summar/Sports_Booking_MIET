@@ -9,45 +9,734 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
+    /* Premium Slot Button Styling */
     .slotBtn {
-      border: 1px solid #d1d5db; /* gray-300 */
-      padding: 10px;
-      border-radius: 9999px;
+      border: 2px solid #e5e7eb;
+      padding: 12px 16px;
+      border-radius: 12px;
       text-align: center;
       cursor: pointer;
       background: #ffffff;
-      font-size: 0.9rem;
-      color: #1f2937; /* gray-800 */
-      transition: all 0.18s ease-out;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
+      position: relative;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
-    .slotBtn:hover:not(.booked):not(.selected) {
-      background: #e5f0ff;
-      border-color: #1d4ed8; /* blue-700 */
+    /* Available slot - hover state */
+    .slotBtn:hover:not(.booked):not(.selected):not(.disabled-6hr) {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+      color: #2563eb;
+    }
+
+    /* Selected slot - strong highlight */
+    .slotBtn.selected {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff !important;
+      border-color: #2563eb;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+      transform: translateY(-2px);
+      font-weight: 700;
+    }
+
+    /* Booked/Blocked slot */
+    .slotBtn.booked {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+      color: #ffffff !important;
+      pointer-events: none;
+      border-color: #ef4444;
+      opacity: 0.95;
+      font-weight: 600;
+    }
+
+    /* Disabled 6-hour rule slot - intentionally blocked look */
+    .slotBtn.disabled-6hr {
+      background: #f9fafb !important;
+      color: #9ca3af !important;
+      pointer-events: none;
+      border: 2px dashed #d1d5db;
+      opacity: 0.7;
+      cursor: not-allowed;
+      position: relative;
+      box-shadow: none;
+    }
+
+    .slotBtn.disabled-6hr::after {
+      content: "6hr";
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 0.65rem;
+      color: #9ca3af;
+      font-weight: 700;
+      background: #e5e7eb;
+      padding: 2px 5px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    /* Modern form inputs */
+    .form-input, .form-select {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.9375rem;
+      transition: all 0.2s ease;
+      background: #ffffff;
+      color: #1f2937;
+    }
+
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+      background: #ffffff;
+    }
+
+    .form-input::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Premium hero card styling */
+    .booking-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
+      padding: 2.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .booking-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+    }
+
+    .booking-card:hover {
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15), 0 10px 30px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Premium button */
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Info message box - premium styling */
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid #93c5fd;
+      border-radius: 14px;
+      padding: 18px 22px;
+      margin-top: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .info-box:hover {
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
       transform: translateY(-1px);
     }
 
-    .slotBtn.selected {
-      background: #1d4ed8;
-      color: #ffffff !important;
-      border-color: #1d4ed8;
-      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+    .info-box-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
     }
 
-    .slotBtn.booked {
-      background: #f97316 !important; /* orange-500 */
-      color: #ffffff !important;
+    .info-box-content {
+      flex: 1;
+    }
+
+    .info-box-title {
+      font-weight: 700;
+      color: #1e40af;
+      font-size: 0.9375rem;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .info-box-text {
+      color: #1e3a8a;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    /* Enhanced legend */
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      color: #4b5563;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Slot loading skeleton */
+    .slot-skeleton {
+      height: 48px;
+      background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+      background-size: 200% 100%;
+      border-radius: 12px;
+      animation: skeleton-loading 1.5s ease-in-out infinite;
+    }
+
+    @keyframes skeleton-loading {
+      0% {
+        background-position: 200% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* Enhanced background with depth */
+    body {
+      background: linear-gradient(135deg, #f9fafb 0%, #f0f4f8 50%, #e2e8f0 100%);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 15% 30%, rgba(37, 99, 235, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 85% 70%, rgba(16, 185, 129, 0.06) 0%, transparent 60%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 70%);
       pointer-events: none;
-      border-color: #f97316;
-      opacity: 0.95;
+      z-index: 0;
+      animation: backgroundPulse 8s ease-in-out infinite;
+    }
+
+    @keyframes backgroundPulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero section depth */
+    .court-grid-view > div:first-child {
+      position: relative;
+      padding: 2.5rem;
+      margin: -2rem -2rem 4rem -2rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    /* Hero card emphasis */
+    .booking-card {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Court Grid Styling - Premium Enhanced */
+    .court-card {
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      animation: cardFadeIn 0.6s ease-out backwards;
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .court-card:nth-child(1) { animation-delay: 0.1s; }
+    .court-card:nth-child(2) { animation-delay: 0.2s; }
+    .court-card:nth-child(3) { animation-delay: 0.3s; }
+    .court-card:nth-child(4) { animation-delay: 0.4s; }
+    .court-card:nth-child(5) { animation-delay: 0.5s; }
+    .court-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .court-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+      transform: scaleX(0);
+      transition: transform 0.35s ease;
+    }
+
+    .court-card::after {
+      content: '';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 0;
+      height: 0;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .court-card:hover {
+      transform: translateY(-12px) scale(1.03);
+      box-shadow: 
+        0 20px 48px rgba(37, 99, 235, 0.25),
+        0 0 0 1px rgba(37, 99, 235, 0.1),
+        0 0 60px rgba(37, 99, 235, 0.15);
+      border-color: #2563eb;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .court-card:hover::before {
+      transform: scaleX(1);
+      height: 6px;
+    }
+
+    .court-card:hover .court-icon {
+      transform: scale(1.15) rotate(8deg);
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+    }
+
+    .court-card.selected {
+      border-color: #2563eb;
+      border-width: 3px;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      box-shadow: 
+        0 16px 40px rgba(37, 99, 235, 0.3),
+        0 0 0 2px rgba(37, 99, 235, 0.2),
+        0 0 80px rgba(37, 99, 235, 0.2);
+      transform: translateY(-4px) scale(1.01);
+    }
+
+    .court-card.selected::before {
+      transform: scaleX(1);
+      height: 5px;
+    }
+
+    .court-card.selected::after {
+      content: '✓';
+      width: 32px;
+      height: 32px;
+      opacity: 1;
+      font-size: 0.875rem;
+    }
+
+    .court-card.selected .selected-badge {
+      display: block;
+    }
+
+    .court-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .court-name {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #1f2937;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.03em;
+      transition: color 0.3s ease;
+    }
+
+    .court-card:hover .court-name {
+      color: #2563eb;
+    }
+
+    .court-type {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      transition: color 0.3s ease;
+    }
+
+    .court-card:hover .court-type {
+      color: #4b5563;
+    }
+
+    .selected-badge {
+      display: none;
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+      animation: badgePulse 0.5s ease;
+    }
+
+    @keyframes badgePulse {
+      0% {
+        transform: translateX(-50%) scale(0.8);
+        opacity: 0;
+      }
+      50% {
+        transform: translateX(-50%) scale(1.1);
+      }
+      100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* View transitions */
+    .court-grid-view,
+    .booking-form-view {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Hero section animation */
+    .court-grid-view > div:first-child {
+      animation: heroFadeIn 0.8s ease-out;
+    }
+
+    @keyframes heroFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Info section animation */
+    .info-section {
+      animation: infoSlideUp 0.8s ease-out 0.2s backwards;
+    }
+
+    @keyframes infoSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Two-column layout container */
+    .homepage-layout {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 2.5rem;
+      align-items: start;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Left column - Info section */
+    .info-column {
+      position: sticky;
+      top: 2rem;
+      height: fit-content;
+    }
+
+    /* Info section styling - Premium */
+    .info-section {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border: 2px solid #e5e7eb;
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .info-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 50%, #2563eb 100%);
+      background-size: 200% 100%;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    /* Right column - Court grid */
+    .courts-column {
+      min-width: 0; /* Prevents grid overflow */
+    }
+
+    /* Timeline-style info steps */
+    .info-steps-container {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    .info-steps-container::before {
+      content: '';
+      position: absolute;
+      left: 28px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%);
+      border-radius: 2px;
+      opacity: 0.3;
+    }
+
+    .info-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      padding: 1.25rem;
+      border-radius: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-step:hover {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      transform: translateX(8px);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+    }
+
+    .info-step-number {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4), 0 0 0 4px rgba(37, 99, 235, 0.1);
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+
+    .info-step:hover .info-step-number {
+      transform: scale(1.1);
+      box-shadow: 0 12px 32px rgba(37, 99, 235, 0.5), 0 0 0 6px rgba(37, 99, 235, 0.15);
+    }
+
+    .info-step-content {
+      flex: 1;
+    }
+
+    .info-step-title {
+      font-weight: 800;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+      font-size: 1.125rem;
+      letter-spacing: -0.01em;
+    }
+
+    .info-step-text {
+      color: #6b7280;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* Court grid header styling - Enhanced */
+    .courts-column h2 {
+      font-size: 2.25rem;
+      font-weight: 900;
+      color: #1f2937;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1f2937 0%, #2563eb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+      display: inline-block;
+    }
+
+    .courts-column h2::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+      border-radius: 2px;
+    }
+
+    .courts-column p {
+      color: #6b7280;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+    }
+
+    /* Responsive improvements */
+    @media (max-width: 1024px) {
+      .homepage-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .info-column {
+        position: static;
+      }
+
+      .info-section {
+        margin-bottom: 0;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .booking-card {
+        padding: 1.5rem;
+      }
+      
+      .slotBtn {
+        padding: 10px 14px;
+        font-size: 0.8125rem;
+      }
+
+      .court-card {
+        padding: 1.5rem;
+      }
+
+      .court-icon {
+        font-size: 2.5rem;
+      }
+
+      .info-section {
+        padding: 1.5rem;
+      }
+
+      .homepage-layout {
+        gap: 1.5rem;
+      }
     }
   </style>
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
+<body class="min-h-screen text-gray-800 flex flex-col">
 
-<header class="bg-white border-b border-gray-200">
+<header class="bg-white border-b border-gray-200 shadow-sm">
   <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
     
     <div class="flex items-center gap-4">
@@ -75,67 +764,154 @@
 
   <!-- MAIN -->
   <main class="flex-1">
-    <div class="max-w-6xl mx-auto px-4 py-8 md:py-10 lg:py-12">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-start">
-
-        <!-- LEFT TEXT SECTION -->
-        <section class="space-y-4">
-          <p class="text-xs font-semibold tracking-wide text-blue-700 uppercase">
+    <div class="max-w-7xl mx-auto px-4 py-8 md:py-12 lg:py-16">
+      
+      <!-- COURT GRID VIEW (Step 1) -->
+      <div id="courtGridView" class="court-grid-view">
+        <!-- Header Section -->
+        <div class="text-center mb-10">
+          <p class="text-xs font-bold tracking-wider text-blue-600 uppercase mb-3">
             MIET Sports • Court Reservations
           </p>
-
-          <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
-            Book Your <span class="text-blue-700">Court Slot</span> for Futsal, Pickleball &amp; More
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-4">
+            Select Your <span class="text-blue-600">Court</span>
           </h1>
-
-          <p class="text-sm md:text-base text-gray-600 max-w-xl">
-            Choose your court, pick a date and select a 30-minute slot. Once a slot is booked for a court,
-            it will not be available to others for the same date and time.
+          <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Choose a court to view available slots and book your preferred time.
           </p>
+        </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <p class="text-xs text-gray-500">Available Sports</p>
-              <p class="font-semibold text-gray-800 mt-1">Futsal, Pickleball, Badminton…</p>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-lg p-3">
-              <p class="text-xs text-gray-500">Slot Duration</p>
-              <p class="font-semibold text-gray-800 mt-1">30 minutes</p>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-lg p-3 col-span-2 md:col-span-1">
-              <p class="text-xs text-gray-500">Rule</p>
-              <p class="font-semibold text-gray-800 mt-1">First-come, first-served</p>
+        <!-- Two-Column Layout -->
+        <div class="homepage-layout">
+          <!-- LEFT COLUMN: How It Works Section -->
+          <div class="info-column">
+            <div class="info-section">
+              <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8">
+                How Court Booking Works
+              </h2>
+              <div class="info-steps-container">
+                <div class="info-step">
+                  <div class="info-step-number">1</div>
+                  <div class="info-step-content">
+                    <div class="info-step-title">Select a Court</div>
+                    <div class="info-step-text">Choose from available courts for Futsal, Pickleball, Badminton, and more.</div>
+                  </div>
+                </div>
+                <div class="info-step">
+                  <div class="info-step-number">2</div>
+                  <div class="info-step-content">
+                    <div class="info-step-title">Choose Date & Time</div>
+                    <div class="info-step-text">Pick your preferred date and select an available 30-minute time slot.</div>
+                  </div>
+                </div>
+                <div class="info-step">
+                  <div class="info-step-number">3</div>
+                  <div class="info-step-content">
+                    <div class="info-step-title">Enter Your Details</div>
+                    <div class="info-step-text">Provide your name, email, and team members (if applicable).</div>
+                  </div>
+                </div>
+                <div class="info-step">
+                  <div class="info-step-number">4</div>
+                  <div class="info-step-content">
+                    <div class="info-step-title">Confirm Booking</div>
+                    <div class="info-step-text">Review and confirm your booking. Wait for admin approval.</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="flex items-center flex-wrap gap-3 text-xs text-gray-500">
-            <span class="inline-flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full border border-gray-400 bg-white"></span> Available
-            </span>
-            <span class="inline-flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-blue-600"></span> Selected
-            </span>
-            <span class="inline-flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-orange-500"></span> Booked / Blocked
-            </span>
-          </div>
-        </section>
+          <!-- RIGHT COLUMN: Available Courts Grid -->
+          <div class="courts-column">
+            <div class="mb-8">
+              <h2>Available Courts</h2>
+              <p>Click on a court below to start booking</p>
+            </div>
 
-        <!-- RIGHT: BOOKING CARD -->
-        <section>
-          <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-7 lg:p-8">
-            <div class="flex items-center justify-between mb-5">
+            <div id="courtGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+              <!-- Court cards will be injected here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKING FORM VIEW (Step 2) -->
+      <div id="bookingFormView" class="booking-form-view" style="display: none;">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+          
+          <!-- LEFT TEXT SECTION -->
+          <section class="space-y-6 pt-4 lg:pt-8">
+            <div>
+              <button id="backToCourtsBtn" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold mb-4 transition-colors">
+                <span>←</span>
+                <span>Back to Courts</span>
+              </button>
+              
+              <p class="text-xs font-bold tracking-wider text-blue-600 uppercase mb-3">
+                MIET Sports • Court Reservations
+              </p>
+
+              <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
+                Book Your <span class="text-blue-600">Court Slot</span>
+              </h1>
+
+              <p class="text-base md:text-lg text-gray-600 max-w-xl leading-relaxed">
+                Pick a date and select a 30-minute slot. Once a slot is booked for a court,
+                it will not be available to others for the same date and time.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div class="bg-white border-2 border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available Sports</p>
+                <p class="font-bold text-gray-900 text-sm">Futsal, Pickleball, Badminton…</p>
+              </div>
+              <div class="bg-white border-2 border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Slot Duration</p>
+                <p class="font-bold text-gray-900 text-sm">30 minutes</p>
+              </div>
+              <div class="bg-white border-2 border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow col-span-2 md:col-span-1">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Rule</p>
+                <p class="font-bold text-gray-900 text-sm">First-come, first-served</p>
+              </div>
+            </div>
+
+            <div class="flex items-center flex-wrap gap-2.5 mt-4">
+              <span class="legend-item">
+                <span class="legend-dot border-2 border-gray-400 bg-white"></span>
+                <span>Available</span>
+              </span>
+              <span class="legend-item">
+                <span class="legend-dot bg-blue-600"></span>
+                <span>Selected</span>
+              </span>
+              <span class="legend-item">
+                <span class="legend-dot bg-red-500"></span>
+                <span>Booked / Blocked</span>
+              </span>
+              <span class="legend-item">
+                <span class="legend-dot bg-gray-300 border-2 border-dashed border-gray-400"></span>
+                <span>Too Soon (6hr rule)</span>
+              </span>
+            </div>
+          </section>
+
+          <!-- RIGHT: BOOKING CARD -->
+          <section class="lg:sticky lg:top-8">
+            <div class="booking-card">
+            <div class="flex items-center justify-between mb-6">
               <div>
-                <h2 class="text-xl md:text-2xl font-bold text-gray-900">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                   Court Booking Form
                 </h2>
-                <p class="text-xs md:text-sm text-gray-500 mt-1">
+                <p class="text-sm text-gray-600">
                   Fill in the details to reserve your preferred slot.
                 </p>
               </div>
-              <div class="hidden md:block text-right">
-                <p class="text-[11px] text-gray-400 uppercase tracking-wide">Today</p>
-                <p class="text-xs font-semibold text-gray-700">
+              <div class="hidden md:block text-right bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
+                <p class="text-[10px] text-blue-600 uppercase tracking-wider font-semibold mb-1">Today</p>
+                <p class="text-sm font-bold text-blue-700">
                   <script>
                     document.write(
                       new Date().toLocaleDateString("en-IN", {
@@ -149,97 +925,109 @@
               </div>
             </div>
 
-            <form id="bookingForm" class="grid grid-cols-1 gap-4">
+            <form id="bookingForm" class="grid grid-cols-1 gap-5">
 
-              <!-- Court -->
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
-                  Select Court
-                </label>
-                <select id="courtSelect"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white">
+              <!-- Court (Hidden dropdown, pre-selected from grid) -->
+              <div style="display: none;">
+                <select id="courtSelect" class="form-select">
                   <option value="">Loading courts...</option>
                 </select>
+              </div>
+              
+              <!-- Selected Court Display -->
+              <div id="selectedCourtDisplay" class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Selected Court</p>
+                <p id="selectedCourtName" class="text-lg font-bold text-blue-900">-</p>
               </div>
 
               <!-- Date -->
               <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
                   Select Date
                 </label>
-                <input type="date"
-                       id="dateInput"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white" />
+                <input type="date" id="dateInput" class="form-input" />
               </div>
 
               <!-- Slots -->
               <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">
                   Available Slots (30 minutes)
                 </label>
                 <div id="slotContainer"
-                     class="grid grid-cols-3 md:grid-cols-4 gap-2.5 mt-1">
+                     class="grid grid-cols-3 md:grid-cols-4 gap-3">
                   <!-- buttons injected by JS -->
+                </div>
+                <!-- Info message for 6-hour rule -->
+                <div id="infoMessage6hr" class="info-box" style="display: none;">
+                  <span class="info-box-icon">ℹ️</span>
+                  <div class="info-box-content">
+                    <div class="info-box-title">Same-Day Booking Notice</div>
+                    <div class="info-box-text">Same-day bookings require a 6-hour advance notice. Please select a future date for more available slots.</div>
+                  </div>
                 </div>
               </div>
 
               <!-- Name -->
               <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
                   Full Name
                 </label>
                 <input type="text"
                        id="nameInput"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white"
+                       class="form-input"
                        placeholder="Enter your full name"
                        required />
               </div>
 
               <!-- Email -->
               <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
                   Student Email
                 </label>
                 <input type="email"
                        id="emailInput"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white"
+                       class="form-input"
                        placeholder="yourid@mietjammu.in"
                        required />
               </div>
-<label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
-  Team Members (comma separated)
-</label>
-<input
-  type="text"
-  id="teamMembers"
-  class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white mb-4"
-  placeholder="Name 1, Name 2, Name 3"
-/>
+
+              <!-- Team Members -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Team Members (comma separated)
+                </label>
+                <input
+                  type="text"
+                  id="teamMembers"
+                  class="form-input"
+                  placeholder="Name 1, Name 2, Name 3"
+                />
+              </div>
 
               <!-- Submit -->
-              <button type="submit"
-                      class="mt-2 inline-flex items-center justify-center gap-2 w-full rounded-lg bg-blue-700 text-white py-2.5 text-sm font-semibold shadow hover:bg-blue-800 transition">
+              <button type="submit" class="btn-primary mt-2">
                 <span>Confirm Booking</span>
                 <span>⚽</span>
               </button>
             </form>
 
-            <p id="responseMsg" class="text-center text-sm font-semibold mt-4 text-gray-700"></p>
+            <div id="responseMsg" class="text-center text-sm font-semibold mt-5 p-4 rounded-lg" style="display: none;"></div>
           </div>
         </section>
+        </div>
       </div>
     </div>
   </main>
 
   <!-- FOOTER -->
-  <footer class="bg-white border-t border-gray-200 mt-8">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-2">
-      <p class="text-xs text-gray-500">
+  <footer class="bg-white border-t border-gray-200 mt-12 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-3">
+      <p class="text-sm text-gray-600">
         ©
         <script>document.write(new Date().getFullYear());</script>
         Model Institute of Engineering &amp; Technology, Jammu. All rights reserved.
       </p>
-      <p class="text-xs text-gray-400">
+      <p class="text-sm text-gray-500">
         Sports Booking System • Internal Use Only
       </p>
     </div>
