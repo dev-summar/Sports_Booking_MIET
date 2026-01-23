@@ -10,6 +10,428 @@
   <!-- SheetJS (for Excel export) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   
+  <style>
+    /* Dashboard Background */
+    body {
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 50%, #e5e7eb 100%);
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Premium Card Styling */
+    .dashboard-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+    }
+
+    .dashboard-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge.pending {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      border: 1px solid #fbbf24;
+    }
+
+    .status-badge.approved {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+
+    .status-badge.rejected {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+
+    .status-badge.blocked {
+      background: linear-gradient(135deg, #e9d5ff 0%, #ddd6fe 100%);
+      color: #6b21a8;
+      border: 1px solid #a78bfa;
+    }
+
+    /* Pending Request Card */
+    .pending-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.25rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pending-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+    }
+
+    .pending-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(251, 191, 36, 0.2);
+      border-color: #fbbf24;
+    }
+
+    /* Action Buttons */
+    .btn-approve {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-approve:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-approve:active {
+      transform: translateY(0);
+    }
+
+    .btn-reject {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-reject:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-reject:active {
+      transform: translateY(0);
+    }
+
+    /* Booking Row Card */
+    .booking-row {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .booking-row:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    /* Warning Card for Block Slot */
+    .warning-card {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border: 2px solid #fca5a5;
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .warning-card::before {
+      content: '⚠️';
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .btn-block {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      color: white;
+      padding: 0.875rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.9375rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .btn-block:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    }
+
+    .btn-block:active {
+      transform: translateY(0);
+    }
+
+    /* Modern Form Inputs */
+    .form-input-modern {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      background: #ffffff;
+    }
+
+    .form-input-modern:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Download Button */
+    .btn-download {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Section Headers */
+    .section-header {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Date Group Header */
+    .date-group-header {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-bottom: 2px solid #d1d5db;
+      padding: 0.875rem 1.25rem;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Court Group */
+    .court-group {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .court-group-header {
+      background: #f9fafb;
+      padding: 0.75rem 1rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: #374151;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Refresh Button */
+    .btn-refresh {
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      color: #374151;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-refresh:hover {
+      background: #f9fafb;
+      border-color: #2563eb;
+      color: #2563eb;
+    }
+
+    /* Dashboard Summary Cards */
+    .summary-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-card.pending {
+      border-left: 4px solid #fbbf24;
+    }
+
+    .summary-card.approved {
+      border-left: 4px solid #10b981;
+    }
+
+    .summary-card.rejected {
+      border-left: 4px solid #ef4444;
+    }
+
+    .summary-card.blocked {
+      border-left: 4px solid #a78bfa;
+    }
+
+    .summary-number {
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+    }
+
+    /* Enhanced Pending Section */
+    .pending-section {
+      border: 2px solid #fbbf24;
+      background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+      box-shadow: 0 8px 24px rgba(251, 191, 36, 0.15);
+      position: relative;
+    }
+
+    .pending-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+      border-radius: 16px 16px 0 0;
+    }
+
+    .pending-section .section-header {
+      color: #92400e;
+      font-size: 1.75rem;
+    }
+
+    /* Reduced Visual Weight for Booking Overview */
+    .booking-overview-section {
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      opacity: 0.95;
+    }
+
+    .booking-overview-section .section-header {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    /* Enhanced Warning Card */
+    .warning-card {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border: 2px solid #fca5a5;
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+    }
+
+    .warning-card::before {
+      content: '⚠️';
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      opacity: 0.3;
+    }
+
+    .warning-text {
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid #ef4444;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #991b1b;
+    }
+  </style>
+  
   <!-- Authentication Check - Must run before page renders -->
   <script>
     // Immediate authentication check - runs before body renders
@@ -19,7 +441,7 @@
   </script>
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
+<body class="min-h-screen text-gray-800 flex flex-col">
 <!-- HEADER -->
 <header class="bg-white border-b border-gray-200">
   <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -58,63 +480,91 @@
 
   <!-- MAIN -->
   <main class="flex-1">
-    <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto px-4 py-8 md:py-12">
       
-
+      <!-- Dashboard Summary -->
+      <section class="mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="summary-card pending">
+            <div class="summary-number text-yellow-600" id="summaryPending">0</div>
+            <div class="summary-label">Pending Requests</div>
+          </div>
+          <div class="summary-card approved">
+            <div class="summary-number text-green-600" id="summaryApproved">0</div>
+            <div class="summary-label">Approved</div>
+          </div>
+          <div class="summary-card rejected">
+            <div class="summary-number text-red-600" id="summaryRejected">0</div>
+            <div class="summary-label">Rejected</div>
+          </div>
+          <div class="summary-card blocked">
+            <div class="summary-number text-purple-600" id="summaryBlocked">0</div>
+            <div class="summary-label">Blocked Slots</div>
+          </div>
+        </div>
+      </section>
+      
       <!-- BOX 1: Pending Requests -->
-      <section class="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
-        <h2 class="text-xl font-bold text-gray-900">Pending Requests</h2>
-        <p class="text-sm text-gray-500 mt-1">
-          Requests awaiting admin approval or rejection.
-        </p>
+      <section class="dashboard-card pending-section mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="section-header">Pending Requests</h2>
+            <p class="section-subtitle">
+              Requests awaiting admin approval or rejection
+            </p>
+          </div>
+          <button id="refreshBtn" class="btn-refresh">
+            🔄 Refresh
+          </button>
+        </div>
 
-        <!-- Legends -->
-        <div class="flex gap-6 mt-4 text-sm items-center">
-          <span class="flex items-center gap-2 text-gray-700">
-            <span class="w-3 h-3 bg-yellow-400 rounded-full"></span> Pending
+        <!-- Status Legend -->
+        <div class="flex flex-wrap gap-4 mb-6 p-3 bg-gray-50 rounded-lg">
+          <span class="flex items-center gap-2 text-sm">
+            <span class="status-badge pending">Pending</span>
           </span>
-          <span class="flex items-center gap-2 text-gray-700">
-            <span class="w-3 h-3 bg-green-500 rounded-full"></span> Approved
+          <span class="flex items-center gap-2 text-sm">
+            <span class="status-badge approved">Approved</span>
           </span>
-          <span class="flex items-center gap-2 text-gray-700">
-            <span class="w-3 h-3 bg-red-500 rounded-full"></span> Rejected
+          <span class="flex items-center gap-2 text-sm">
+            <span class="status-badge rejected">Rejected</span>
+          </span>
+          <span class="flex items-center gap-2 text-sm">
+            <span class="status-badge blocked">Blocked</span>
           </span>
         </div>
 
         <!-- PENDING REQUEST LIST -->
-        <div id="pendingRequestsContainer" class="mt-5 space-y-3"></div>
+        <div id="pendingRequestsContainer" class="space-y-4"></div>
       </section>
        
       
 
-      <!-- BOX 2: Filter + Bookings Overview -->
-       <!-- BOX 2: Booking Overview -->
-    <section class="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
+      <!-- BOX 2: Booking Overview -->
+      <section class="dashboard-card booking-overview-section mb-8">
 
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-xl font-bold text-gray-900">Booking Overview</h2>
-          <p class="text-sm text-gray-500 mt-1">Filter bookings and take action.</p>
+          <h2 class="section-header">Booking Overview</h2>
+          <p class="section-subtitle">Filter bookings and view all reservations</p>
         </div>
 
         <!-- ✅ Download Excel Button -->
         <button id="downloadExcelBtn"
-          class="px-4 py-2 rounded-full border border-green-600 text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 flex items-center gap-2">
+          class="btn-download">
           📥 Download Approved (Excel)
         </button>
       </div>
         <!-- Filters -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
           <div>
-            <label class="text-xs font-semibold">Filter by Date</label>
-            <input type="date" id="filterDate"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" />
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Filter by Date</label>
+            <input type="date" id="filterDate" class="form-input-modern" />
           </div>
 
           <div>
-            <label class="text-xs font-semibold">Filter by Court</label>
-            <select id="filterCourt"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Filter by Court</label>
+            <select id="filterCourt" class="form-input-modern">
               <option value="all">All Courts</option>
             </select>
           </div>
@@ -136,40 +586,44 @@
       </section>
 
       <!-- BOX 3: Block Slot -->
-      <section class="bg-white border border-gray-200 rounded-2xl p-6">
+      <section class="warning-card">
+        <div class="mb-6">
+          <h2 class="section-header">Block a Slot (Admin)</h2>
+          <p class="section-subtitle">
+            Block a specific slot for maintenance or faculty usage. This action cannot be easily undone.
+          </p>
+        </div>
 
-        <h2 class="text-lg font-bold text-gray-900">Block a Slot (Admin)</h2>
-        <p class="text-sm text-gray-500 mt-1">
-          Block a specific slot for maintenance or faculty usage.
-        </p>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="text-xs font-semibold">Court</label>
-            <select id="blockCourt" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Court</label>
+            <select id="blockCourt" class="form-input-modern">
               <option value="">Select Court</option>
             </select>
           </div>
 
           <div>
-            <label class="text-xs font-semibold">Date</label>
-            <input type="date" id="blockDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" />
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+            <input type="date" id="blockDate" class="form-input-modern" />
           </div>
 
           <div>
-            <label class="text-xs font-semibold">Slot</label>
-            <select id="blockSlot" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Slot</label>
+            <select id="blockSlot" class="form-input-modern">
               <option value="">Select Slot</option>
             </select>
           </div>
         </div>
 
-        <button id="blockBtn"
-          class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm">
+        <div class="warning-text">
+          <strong>⚠️ Important:</strong> Blocking a slot will prevent students from booking it. This action is typically used for maintenance, events, or faculty reservations. The slot will remain blocked until manually removed.
+        </div>
+
+        <button id="blockBtn" class="btn-block">
           ⛔ Block This Slot
         </button>
 
-        <p id="blockMessage" class="text-xs mt-2 text-gray-600"></p>
+        <p id="blockMessage" class="text-sm mt-3 font-semibold"></p>
       </section>
 
     </div>

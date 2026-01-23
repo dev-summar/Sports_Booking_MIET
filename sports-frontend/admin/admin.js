@@ -66,6 +66,7 @@ async function loadBookings() {
 
   renderBookings();
   updateBlockSlotOptions();
+  updateDashboardSummary();
 }
 
 /* ------------------------------
@@ -145,13 +146,13 @@ function renderBookings() {
       const group = byDate[dateKey];
 
       const dateCard = document.createElement("div");
-      dateCard.className =
-        "border border-gray-200 bg-gray-50 rounded-xl mb-5 overflow-hidden";
+      dateCard.className = "dashboard-card mb-6 overflow-hidden";
 
       dateCard.innerHTML = `
-        <div class="px-4 py-2 border-b bg-gray-100 flex items-center gap-2">
-          📅 <span class="font-semibold">${dateKey}</span>
-          <span class="text-xs text-gray-500">(${group.length} bookings)</span>
+        <div class="date-group-header">
+          <span>📅</span>
+          <span>${dateKey}</span>
+          <span class="text-xs text-gray-500 font-normal">(${group.length} booking${group.length !== 1 ? 's' : ''})</span>
         </div>
       `;
 
@@ -166,63 +167,68 @@ function renderBookings() {
       });
 
       Object.keys(byCourt).forEach(court => {
-        const block = document.createElement("div");
-        block.className = "border border-gray-200 rounded-lg";
+        const courtGroup = document.createElement("div");
+        courtGroup.className = "court-group";
 
-        block.innerHTML = `
-          <div class="bg-gray-100 px-3 py-2 text-xs font-semibold flex justify-between">
-            ${court}
-            <span class="text-gray-500">${byCourt[court].length} item(s)</span>
+        courtGroup.innerHTML = `
+          <div class="court-group-header">
+            <span>🏟️ ${court}</span>
+            <span class="text-xs text-gray-500 font-normal">${byCourt[court].length} booking${byCourt[court].length !== 1 ? 's' : ''}</span>
           </div>
         `;
 
-        const table = document.createElement("div");
+        const bookingsList = document.createElement("div");
+        bookingsList.className = "divide-y divide-gray-200";
 
         byCourt[court].forEach(b => {
           const row = document.createElement("div");
-          row.className =
-            "flex items-center justify-between px-3 py-2 border-b last:border-0";
+          row.className = "booking-row";
 
           let teamHTML = "";
           if (b.teamMembers && b.teamMembers.trim() !== "") {
             teamHTML = `
-              <br>
-              <span class='text-[11px] text-blue-700'>👥 ${b.teamMembers}</span>
+              <div class="mt-1.5 flex items-center gap-1 text-xs text-blue-700 font-medium">
+                <span>👥</span>
+                <span>${b.teamMembers}</span>
+              </div>
             `;
           }
 
-          const name =
-            b.status === "blocked"
-              ? "🔒 Blocked by Admin"
-              : `
-                ${b.studentName}
-                <br>
-                <span class='text-xs text-gray-400'>${b.studentEmail}</span>
+          const nameSection = b.status === "blocked"
+            ? `<div class="font-bold text-gray-900">🔒 Blocked by Admin</div>`
+            : `
+              <div>
+                <div class="font-bold text-gray-900">${b.studentName}</div>
+                <div class="text-sm text-gray-600 mt-0.5">${b.studentEmail}</div>
                 ${teamHTML}
-              `;
+              </div>
+            `;
 
-          const color =
-            b.status === "approved"
-              ? "bg-green-100 text-green-700"
-              : b.status === "rejected"
-              ? "bg-red-100 text-red-700"
-              : b.status === "blocked"
-              ? "bg-purple-100 text-purple-700"
-              : "bg-yellow-100 text-yellow-700";
+          const statusClass = b.status === "approved" ? "approved"
+            : b.status === "rejected" ? "rejected"
+            : b.status === "blocked" ? "blocked"
+            : "pending";
 
           row.innerHTML = `
-            <div class="text-sm font-semibold leading-tight">${name}</div>
-            <div class="text-sm">${b.startTime}</div>
-            <span class="px-2 py-1 text-xs rounded-full ${color}">
-              ${b.status}
-            </span>
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex-1">
+                ${nameSection}
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="text-right">
+                  <div class="font-bold text-gray-900 text-base">${b.startTime}</div>
+                  <div class="text-xs text-gray-500 mt-0.5">Time Slot</div>
+                </div>
+                <span class="status-badge ${statusClass}">${b.status}</span>
+              </div>
+            </div>
           `;
 
-          table.appendChild(row);
+          bookingsList.appendChild(row);
         });
 
-        block.appendChild(table);
-        body.appendChild(block);
+        courtGroup.appendChild(bookingsList);
+        body.appendChild(courtGroup);
       });
 
       dateCard.appendChild(body);
@@ -247,34 +253,80 @@ function renderPendingRequests() {
   }
 
   pending.forEach(b => {
-    const row = document.createElement("div");
-    row.className =
-      "border border-gray-200 rounded-lg p-3 flex items-center justify-between bg-gray-50";
+    const card = document.createElement("div");
+    card.className = "pending-card";
 
-    row.innerHTML = `
-      <div>
-        <p class="font-semibold text-sm">${b.studentName}</p>
-        <p class="text-xs text-gray-500">${b.studentEmail}</p>
+    const teamInfo = b.teamMembers && b.teamMembers.trim() !== "" 
+      ? `<div class="mt-2 flex items-center gap-1 text-xs text-blue-700 font-medium">
+           <span>👥</span>
+           <span>${b.teamMembers}</span>
+         </div>` 
+      : "";
 
-        ${b.teamMembers && b.teamMembers.trim() !== "" ?
-        `<p class="text-xs text-blue-700 mt-1">👥 ${b.teamMembers}</p>` : ""}
+    card.innerHTML = `
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex-1">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <p class="font-bold text-base text-gray-900">${b.studentName}</p>
+              <p class="text-sm text-gray-600 mt-0.5">${b.studentEmail}</p>
+            </div>
+            <span class="status-badge pending">Pending</span>
+          </div>
+          
+          ${teamInfo}
+          
+          <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <div class="flex items-center gap-1.5 text-gray-700">
+              <span class="font-semibold">🏟️</span>
+              <span class="font-semibold">${b.courtId?.name || "Court"}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-gray-700">
+              <span class="font-semibold">📅</span>
+              <span>${b.date}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-gray-700">
+              <span class="font-semibold">🕐</span>
+              <span class="font-bold">${b.startTime}</span>
+            </div>
+          </div>
+        </div>
 
-        <p class="text-xs mt-1 text-gray-400">
-          ${b.courtId?.name || "Court"} • ${b.date} • ${b.startTime}
-        </p>
-      </div>
-
-      <div class="flex gap-2">
-        <button class="px-3 py-1 bg-green-600 text-white text-xs rounded-md"
-                onclick="updateBookingStatus('${b._id}','approve', this)">Approve</button>
-
-        <button class="px-3 py-1 bg-red-600 text-white text-xs rounded-md"
-                onclick="updateBookingStatus('${b._id}','reject', this)">Reject</button>
+        <div class="flex gap-3">
+          <button class="btn-approve"
+                  onclick="updateBookingStatus('${b._id}','approve', this)">
+            ✓ Approve
+          </button>
+          <button class="btn-reject"
+                  onclick="updateBookingStatus('${b._id}','reject', this)">
+            ✕ Reject
+          </button>
+        </div>
       </div>
     `;
 
-    container.appendChild(row);
+    container.appendChild(card);
   });
+}
+
+/* ------------------------------
+   UPDATE DASHBOARD SUMMARY
+---------------------------------- */
+function updateDashboardSummary() {
+  const pending = allBookings.filter(b => b.status === "pending").length;
+  const approved = allBookings.filter(b => b.status === "approved").length;
+  const rejected = allBookings.filter(b => b.status === "rejected").length;
+  const blocked = allBookings.filter(b => b.status === "blocked").length;
+
+  const pendingEl = document.getElementById("summaryPending");
+  const approvedEl = document.getElementById("summaryApproved");
+  const rejectedEl = document.getElementById("summaryRejected");
+  const blockedEl = document.getElementById("summaryBlocked");
+
+  if (pendingEl) pendingEl.textContent = pending;
+  if (approvedEl) approvedEl.textContent = approved;
+  if (rejectedEl) rejectedEl.textContent = rejected;
+  if (blockedEl) blockedEl.textContent = blocked;
 }
 
 /* ------------------------------
@@ -301,6 +353,7 @@ async function updateBookingStatus(id, action, buttonElement) {
     await loadBookings();
     renderBookings();
     renderPendingRequests();
+    updateDashboardSummary();
     
   } catch (error) {
     alert(`Failed to ${action} booking. Please try again.`);
@@ -343,6 +396,7 @@ blockBtn?.addEventListener("click", async () => {
 
   loadBookings();
   updateBlockSlotOptions();
+  updateDashboardSummary();
 });
 
 /* ------------------------------
@@ -351,13 +405,21 @@ blockBtn?.addEventListener("click", async () => {
 blockCourt?.addEventListener("change", updateBlockSlotOptions);
 blockDate?.addEventListener("change", updateBlockSlotOptions);
 
-filterCourt?.addEventListener("change", renderBookings);
-filterDate?.addEventListener("change", renderBookings);
+filterCourt?.addEventListener("change", () => {
+  renderBookings();
+  updateDashboardSummary();
+});
+
+filterDate?.addEventListener("change", () => {
+  renderBookings();
+  updateDashboardSummary();
+});
 
 refreshBtn?.addEventListener("click", async () => {
   await loadBookings();
   renderBookings();
   renderPendingRequests();
+  updateDashboardSummary();
 });
 
 document.getElementById("downloadExcelBtn")?.addEventListener("click", downloadApprovedBookings);

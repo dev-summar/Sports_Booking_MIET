@@ -59,6 +59,7 @@ function getSportIcon(sportType) {
     if (type.includes("badminton")) return "🏸";
     if (type.includes("basketball")) return "🏀";
     if (type.includes("tennis")) return "🎾";
+    if (type.includes("volleyball")) return "🏐";
     return "🏟️";
 }
 
