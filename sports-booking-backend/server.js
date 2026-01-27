@@ -9,6 +9,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Prevent API caching at CDN (Cloudflare) and browser level
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
+
 // Connect DB
 connectDB();
 

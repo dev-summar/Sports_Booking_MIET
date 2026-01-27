@@ -147,21 +147,43 @@ function selectCourt(courtId, courtName) {
 
 // Load courts
 async function loadCourts() {
-    const res = await fetch(`${API_URL}/courts`);
-    courtsData = await res.json();
+    try {
+        // Force fresh data by disabling cache to avoid 304 responses from Cloudflare
+        const res = await fetch(`${API_URL}/courts`, {
+            cache: "no-store"
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        courtsData = await res.json();
+        console.log('Courts loaded successfully:', courtsData);
 
-    // Populate dropdown (hidden but needed for form submission)
-    courtSelect.innerHTML = '<option value="">Select court</option>';
-    courtsData.forEach(court => {
-        courtSelect.innerHTML += `<option value="${court._id}">${court.name}</option>`;
-    });
-    
-    // Render court grid
-    renderCourtGrid(courtsData);
-    
-    // Initialize view states for smooth transitions
-    courtGridView.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-    bookingFormView.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+        // Handle empty array gracefully
+        if (!courtsData || courtsData.length === 0) {
+            console.warn('No courts returned from API');
+            courtGridContainer.innerHTML = '<div class="text-center py-8 text-gray-500">No courts available at the moment. Please try again later.</div>';
+            courtSelect.innerHTML = '<option value="">No courts available</option>';
+            return;
+        }
+
+        // Populate dropdown (hidden but needed for form submission)
+        courtSelect.innerHTML = '<option value="">Select court</option>';
+        courtsData.forEach(court => {
+            courtSelect.innerHTML += `<option value="${court._id}">${court.name}</option>`;
+        });
+        
+        // Render court grid
+        renderCourtGrid(courtsData);
+        
+        // Initialize view states for smooth transitions
+        courtGridView.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+        bookingFormView.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+    } catch (error) {
+        console.error('Error loading courts:', error);
+        courtGridContainer.innerHTML = '<div class="text-center py-8 text-red-500">Failed to load courts. Please refresh the page.</div>';
+    }
 }
 
 // Back to court selection
@@ -434,5 +456,10 @@ dateInput.addEventListener("change", () => {
     loadBookedSlots();
 });
 
-// Init
-loadCourts();
+// Init: Ensure loadCourts() runs only after DOM is fully ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadCourts);
+} else {
+    // DOM is already ready (e.g., if script loaded async)
+    loadCourts();
+}

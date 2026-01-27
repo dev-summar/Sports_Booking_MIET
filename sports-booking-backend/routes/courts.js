@@ -14,6 +14,11 @@ router.post("/add", async (req, res) => {
 
 // Get all courts
 router.get("/", async (req, res) => {
+  // Ensure no caching by browser or CDN
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
   const courts = await Court.find();
   res.json(courts);
 });
