@@ -15,8 +15,76 @@ const blockSlot = document.getElementById("blockSlot");
 const blockBtn = document.getElementById("blockBtn");
 const blockMessage = document.getElementById("blockMessage");
 
+// Booking enable/disable toggle (admin)
+const bookingStatusBadge = document.getElementById("bookingStatusBadge");
+const bookingToggleBtn = document.getElementById("bookingToggleBtn");
+const bookingStatusBadgeMobile = document.getElementById("bookingStatusBadgeMobile");
+const bookingToggleBtnMobile = document.getElementById("bookingToggleBtnMobile");
+
 let allBookings = [];
 let courts = [];
+
+function getAdminToken() {
+  return localStorage.getItem("admintoken") || "";
+}
+
+function setBookingToggleUI(enabled) {
+  const badgeText = enabled ? "Bookings ON" : "Bookings OFF";
+  const badgeClass = enabled
+    ? "px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800"
+    : "px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800";
+  const btnText = enabled ? "Stop Bookings" : "Resume Bookings";
+  const btnTextMobile = enabled ? "Stop" : "Resume";
+  const btnClass = enabled
+    ? "px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors duration-200"
+    : "px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors duration-200";
+
+  if (bookingStatusBadge) {
+    bookingStatusBadge.textContent = badgeText;
+    bookingStatusBadge.className = badgeClass;
+  }
+  if (bookingStatusBadgeMobile) {
+    bookingStatusBadgeMobile.textContent = badgeText;
+    bookingStatusBadgeMobile.className = badgeClass;
+  }
+  if (bookingToggleBtn) {
+    bookingToggleBtn.textContent = btnText;
+    bookingToggleBtn.className = btnClass;
+  }
+  if (bookingToggleBtnMobile) {
+    bookingToggleBtnMobile.textContent = btnTextMobile;
+    bookingToggleBtnMobile.className = btnClass;
+  }
+}
+
+async function loadBookingStatus() {
+  const token = getAdminToken();
+  const res = await fetch(`${API_URL}/admin/booking-status`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (res.status === 401) {
+    localStorage.removeItem("admintoken");
+    window.location.href = "./index.html";
+    return;
+  }
+  const data = await res.json();
+  setBookingToggleUI(Boolean(data.bookingEnabled));
+}
+
+async function toggleBookingStatus() {
+  const token = getAdminToken();
+  const res = await fetch(`${API_URL}/admin/toggle-booking`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (res.status === 401) {
+    localStorage.removeItem("admintoken");
+    window.location.href = "./index.html";
+    return;
+  }
+  const data = await res.json();
+  setBookingToggleUI(Boolean(data.bookingEnabled));
+}
 
 /* ------------------------------
    FIX DATE FORMAT ALWAYS → YYYY-MM-DD
@@ -68,6 +136,11 @@ async function loadBookings() {
   updateBlockSlotOptions();
   updateDashboardSummary();
 }
+
+// Init booking toggle
+loadBookingStatus();
+if (bookingToggleBtn) bookingToggleBtn.addEventListener("click", toggleBookingStatus);
+if (bookingToggleBtnMobile) bookingToggleBtnMobile.addEventListener("click", toggleBookingStatus);
 
 /* ------------------------------
    UPDATE BLOCK SLOT DROPDOWN

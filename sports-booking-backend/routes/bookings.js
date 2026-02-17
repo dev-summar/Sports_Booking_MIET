@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Booking = require("../models/Booking");
+const jwt = require("jsonwebtoken");
+const Setting = require("../models/Setting");
 const sendMail = require("../utils/mail"); // ⭐ EMAIL FUNCTION
 const {
   getAdminBookingNotificationTemplate,
@@ -13,6 +15,46 @@ const {
 // ===============================
 router.post("/add", async (req, res) => {
   try {
+    // Booking enable/disable gate (admin controlled, persisted in DB)
+    const s = await Setting.findOne({ key: "bookingEnabled" });
+    if (s && s.value === false) {
+      return res
+        .status(403)
+        .json({ error: "Bookings are temporarily disabled by admin. Please try later." });
+    }
+
+    // Email domain validation (required)
+    const studentEmail = String(req.body?.studentEmail || "").trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(studentEmail)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+    if (!studentEmail.endsWith("@mietjammu.in")) {
+      return res.status(400).json({ error: "Only official college email IDs are allowed for booking." });
+    }
+
+    // Email verification gate (OTP → short-lived token)
+    // Booking logic below remains unchanged; this is a pre-check only.
+    const verificationToken =
+      req.headers["x-email-verification-token"] ||
+      (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+
+    if (!verificationToken) {
+      return res.status(401).json({ error: "Email not verified" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(verificationToken, process.env.JWT_SECRET || "jwt_secret");
+    } catch (e) {
+      return res.status(401).json({ error: "Email verification expired or invalid" });
+    }
+
+    const bodyEmail = String(req.body?.studentEmail || "").trim().toLowerCase();
+    if (!bodyEmail || decoded?.purpose !== "email_verification" || decoded?.email !== bodyEmail) {
+      return res.status(401).json({ error: "Email not verified" });
+    }
+
     // Validate 6-hour same-day booking restriction
     const { date, startTime } = req.body;
     const today = new Date();

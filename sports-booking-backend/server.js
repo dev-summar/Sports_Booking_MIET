@@ -9,6 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// OTP routes (mounted both with and without /api prefix)
+app.use("/", require("./routes/otp"));
+app.use("/api", require("./routes/otp"));
+
 // Prevent API caching at CDN (Cloudflare) and browser level
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {

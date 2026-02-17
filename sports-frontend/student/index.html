@@ -165,6 +165,31 @@
       cursor: not-allowed;
     }
 
+    /* Secondary button (OTP actions) */
+    .btn-secondary {
+      background: #ffffff;
+      color: #1d4ed8;
+      border: 2px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      border-color: #93c5fd;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     /* Info message box - premium styling */
     .info-box {
       background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
@@ -984,11 +1009,35 @@
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                   Student Email
                 </label>
-                <input type="email"
-                       id="emailInput"
-                       class="form-input"
-                       placeholder="yourid@mietjammu.in"
-                       required />
+                <div class="flex gap-3">
+                  <input type="email"
+                         id="emailInput"
+                         class="form-input flex-1"
+                         placeholder="yourid@mietjammu.in"
+                         required />
+                  <button type="button" id="sendOtpBtn" class="btn-secondary whitespace-nowrap">
+                    Send OTP
+                  </button>
+                </div>
+                <p id="otpStatus" class="text-xs mt-2 text-gray-600"></p>
+              </div>
+
+              <!-- OTP -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  OTP
+                </label>
+                <div class="flex gap-3">
+                  <input type="text"
+                         id="otpInput"
+                         class="form-input flex-1"
+                         placeholder="Enter 6-digit OTP"
+                         inputmode="numeric"
+                         autocomplete="one-time-code" />
+                  <button type="button" id="verifyOtpBtn" class="btn-secondary whitespace-nowrap">
+                    Verify OTP
+                  </button>
+                </div>
               </div>
 
               <!-- Team Members -->
@@ -1005,7 +1054,7 @@
               </div>
 
               <!-- Submit -->
-              <button type="submit" class="btn-primary mt-2">
+              <button type="submit" class="btn-primary mt-2" id="confirmBookingBtn" disabled>
                 <span>Confirm Booking</span>
                 <span>⚽</span>
               </button>

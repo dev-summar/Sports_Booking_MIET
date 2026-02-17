@@ -19,6 +19,89 @@ const backToCourtsBtn = document.getElementById("backToCourtsBtn");
 const selectedCourtDisplay = document.getElementById("selectedCourtDisplay");
 const selectedCourtName = document.getElementById("selectedCourtName");
 
+// ===============================
+// Email OTP verification (pre-booking gate)
+// ===============================
+const emailInput = document.getElementById("emailInput");
+const sendOtpBtn = document.getElementById("sendOtpBtn");
+const otpInput = document.getElementById("otpInput");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+const otpStatus = document.getElementById("otpStatus");
+const confirmBookingBtn = document.getElementById("confirmBookingBtn");
+
+let otpCooldownInterval = null;
+
+function normalizeEmail(email) {
+    return String(email || "").trim().toLowerCase();
+}
+
+function isAllowedCollegeEmail(email) {
+    // Basic email format + strict domain restriction
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return false;
+    return email.endsWith("@mietjammu.in");
+}
+
+function setOtpStatus(message, kind = "info") {
+    if (!otpStatus) return;
+    otpStatus.textContent = message || "";
+    otpStatus.className =
+        "text-xs mt-2 " +
+        (kind === "error" ? "text-red-600" : kind === "success" ? "text-green-700" : "text-gray-600");
+}
+
+function setBookingEnabled(enabled) {
+    if (!confirmBookingBtn) return;
+    confirmBookingBtn.disabled = !enabled;
+}
+
+function clearOtpCooldown() {
+    if (otpCooldownInterval) {
+        clearInterval(otpCooldownInterval);
+        otpCooldownInterval = null;
+    }
+}
+
+function startOtpCooldown(seconds) {
+    if (!sendOtpBtn) return;
+    clearOtpCooldown();
+    const until = Date.now() + seconds * 1000;
+    sendOtpBtn.disabled = true;
+
+    otpCooldownInterval = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+        if (remaining <= 0) {
+            clearOtpCooldown();
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.textContent = "Send OTP";
+            return;
+        }
+        sendOtpBtn.textContent = `Resend (${remaining}s)`;
+    }, 250);
+}
+
+function resetEmailVerificationUI() {
+    sessionStorage.removeItem("emailVerificationToken");
+    sessionStorage.removeItem("emailVerifiedFor");
+    setBookingEnabled(false);
+    if (otpInput) otpInput.value = "";
+    if (sendOtpBtn) {
+        // Disable until email is valid
+        const email = normalizeEmail(emailInput?.value);
+        sendOtpBtn.disabled = !isAllowedCollegeEmail(email);
+        sendOtpBtn.textContent = "Send OTP";
+    }
+    clearOtpCooldown();
+    const email = normalizeEmail(emailInput?.value);
+    if (!email) {
+        setOtpStatus("");
+    } else if (!isAllowedCollegeEmail(email)) {
+        setOtpStatus("Only official college email IDs are allowed for booking.", "error");
+    } else {
+        setOtpStatus("Email not verified.");
+    }
+}
+
 let selectedSlot = "";
 let currentRequestController = null; // For request cancellation
 let courtsData = []; // Store courts for grid rendering
@@ -232,7 +315,111 @@ backToCourtsBtn.addEventListener("click", () => {
     document.getElementById("nameInput").value = "";
     document.getElementById("emailInput").value = "";
     document.getElementById("teamMembers").value = "";
+    resetEmailVerificationUI();
 });
+
+// OTP UI init + handlers
+resetEmailVerificationUI();
+if (emailInput) {
+    emailInput.addEventListener("input", () => {
+        resetEmailVerificationUI();
+    });
+}
+
+if (sendOtpBtn) {
+    sendOtpBtn.addEventListener("click", async () => {
+        const email = normalizeEmail(emailInput?.value);
+        if (!email) {
+            setOtpStatus("Please enter your email first.", "error");
+            return;
+        }
+        if (!isAllowedCollegeEmail(email)) {
+            setOtpStatus("Only official college email IDs are allowed for booking.", "error");
+            return;
+        }
+
+        setOtpStatus("Sending OTP...", "info");
+        sendOtpBtn.disabled = true;
+
+        try {
+            const res = await fetch(`${API_URL}/send-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const retry = Number(data.retryAfterSeconds || 0);
+                if (res.status === 429 && retry > 0) {
+                    setOtpStatus(`Please wait ${retry}s before requesting another OTP.`, "error");
+                    startOtpCooldown(retry);
+                    return;
+                }
+                setOtpStatus(data.error || "Failed to send OTP.", "error");
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.textContent = "Send OTP";
+                return;
+            }
+
+            setOtpStatus("OTP sent. Check your email (valid for 5 minutes).", "success");
+            startOtpCooldown(Number(data.cooldownSeconds || 60));
+        } catch (e) {
+            setOtpStatus("Network error while sending OTP.", "error");
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.textContent = "Send OTP";
+        }
+    });
+}
+
+if (verifyOtpBtn) {
+    verifyOtpBtn.addEventListener("click", async () => {
+        const email = normalizeEmail(emailInput?.value);
+        const otp = String(otpInput?.value || "").trim();
+
+        if (!email) {
+            setOtpStatus("Please enter your email first.", "error");
+            return;
+        }
+        if (!isAllowedCollegeEmail(email)) {
+            setOtpStatus("Please use your college email.", "error");
+            return;
+        }
+        if (!/^\d{6}$/.test(otp)) {
+            setOtpStatus("Please enter the 6-digit OTP.", "error");
+            return;
+        }
+
+        verifyOtpBtn.disabled = true;
+        setOtpStatus("Verifying OTP...", "info");
+
+        try {
+            const res = await fetch(`${API_URL}/verify-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, otp })
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.token) {
+                setOtpStatus(data.error || "OTP verification failed.", "error");
+                setBookingEnabled(false);
+                verifyOtpBtn.disabled = false;
+                return;
+            }
+
+            sessionStorage.setItem("emailVerificationToken", data.token);
+            sessionStorage.setItem("emailVerifiedFor", email);
+            setOtpStatus("Email verified. You can confirm booking now.", "success");
+            setBookingEnabled(true);
+            verifyOtpBtn.disabled = false;
+        } catch (e) {
+            setOtpStatus("Network error while verifying OTP.", "error");
+            setBookingEnabled(false);
+            verifyOtpBtn.disabled = false;
+        }
+    });
+}
 
 // Show loading skeleton for slots
 function showSlotLoading() {
@@ -361,6 +548,16 @@ bookingForm.addEventListener("submit", async (e) => {
 
     console.log("TRYING TO SUBMIT WITH SLOT:", selectedSlot);
 
+    // Email verification gate (OTP)
+    const bookingEmail = normalizeEmail(document.getElementById("emailInput").value);
+    const verifiedFor = normalizeEmail(sessionStorage.getItem("emailVerifiedFor"));
+    const verificationToken = sessionStorage.getItem("emailVerificationToken");
+
+    if (!verificationToken || !verifiedFor || verifiedFor !== bookingEmail) {
+        alert("Please verify your email with OTP before confirming the booking.");
+        return;
+    }
+
     if (!selectedSlot) {
         alert("Please select a slot!");
         return;
@@ -402,11 +599,26 @@ bookingForm.addEventListener("submit", async (e) => {
     };
 
     try {
-        await fetch(`${API_URL}/bookings/add`, {
+        const res = await fetch(`${API_URL}/bookings/add`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "x-email-verification-token": verificationToken
+            },
             body: JSON.stringify(bookingData)
         });
+
+        if (!res.ok) {
+            if (res.status === 403) {
+                const data = await res.json().catch(() => ({}));
+                responseMsg.innerHTML =
+                    data.error || "Bookings are temporarily disabled by admin. Please try later.";
+                responseMsg.className = "bg-red-50 border-2 border-red-200 text-red-700";
+                responseMsg.style.display = "block";
+                return;
+            }
+            throw new Error("Booking failed");
+        }
 
         // Success message
         responseMsg.innerHTML = "🎉 Booking Successful! Wait for admin approval.";
