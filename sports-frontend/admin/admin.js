@@ -438,7 +438,7 @@ async function updateBookingStatus(id, action, buttonElement) {
 }
 
 /* ------------------------------
-   BLOCK SLOT
+   BLOCK SLOT (admin-only API)
 ---------------------------------- */
 blockBtn?.addEventListener("click", async () => {
   const courtId = blockCourt.value;
@@ -451,25 +451,70 @@ blockBtn?.addEventListener("click", async () => {
     return;
   }
 
-  await fetch(`${API_URL}/bookings/add`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      studentName: "ADMIN BLOCKED",
-      studentEmail: "sports@mietjammu.in",
-      courtId,
-      date,
-      startTime,
-      status: "blocked"
-    })
-  });
+  const token = getAdminToken();
+  if (!token) {
+    blockMessage.textContent = "⚠ Session expired. Please log in again.";
+    blockMessage.className = "text-red-600 text-xs";
+    return;
+  }
 
-  blockMessage.textContent = "⛔ Slot BLOCKED!";
-  blockMessage.className = "text-green-600 text-xs";
+  const originalText = blockBtn?.textContent;
+  if (blockBtn) {
+    blockBtn.disabled = true;
+    blockBtn.textContent = "Blocking...";
+  }
+  blockMessage.textContent = "";
+  blockMessage.className = "text-xs";
 
-  loadBookings();
-  updateBlockSlotOptions();
-  updateDashboardSummary();
+  try {
+    const res = await fetch(`${API_URL}/admin/block-slot`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ courtId, date, startTime })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem("admintoken");
+        window.location.href = "./admin_login.html";
+        return;
+      }
+      if (res.status === 403) {
+        blockMessage.textContent = "⛔ You do not have permission to block slots.";
+        blockMessage.className = "text-red-600 text-xs";
+        return;
+      }
+      if (res.status === 400) {
+        blockMessage.textContent = data.error || "Slot already booked or blocked.";
+        blockMessage.className = "text-red-600 text-xs";
+        return;
+      }
+      blockMessage.textContent = data.error || "Failed to block slot. Please try again.";
+      blockMessage.className = "text-red-600 text-xs";
+      return;
+    }
+
+    blockMessage.textContent = "⛔ Slot BLOCKED!";
+    blockMessage.className = "text-green-600 text-xs";
+
+    await loadBookings();
+    updateBlockSlotOptions();
+    updateDashboardSummary();
+  } catch (err) {
+    console.error("Block slot error:", err);
+    blockMessage.textContent = "Network error. Please try again.";
+    blockMessage.className = "text-red-600 text-xs";
+  } finally {
+    if (blockBtn) {
+      blockBtn.disabled = false;
+      blockBtn.textContent = originalText || "⛔ Block This Slot";
+    }
+  }
 });
 
 /* ------------------------------
