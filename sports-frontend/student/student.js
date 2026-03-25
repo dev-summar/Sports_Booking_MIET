@@ -20,12 +20,17 @@ const selectedCourtDisplay = document.getElementById("selectedCourtDisplay");
 const selectedCourtName = document.getElementById("selectedCourtName");
 
 // ===============================
-// Email OTP verification (pre-booking gate)
+// PI-360 authentication (pre-booking gate)
 // ===============================
+const nameInput = document.getElementById("nameInput");
 const emailInput = document.getElementById("emailInput");
 const sendOtpBtn = document.getElementById("sendOtpBtn");
 const otpInput = document.getElementById("otpInput");
 const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+const pi360IdInput = document.getElementById("pi360IdInput");
+const pi360PassInput = document.getElementById("pi360PassInput");
+const pi360LoginBtn = document.getElementById("pi360LoginBtn");
+const pi360LoginSection = document.getElementById("pi360LoginSection");
 const otpStatus = document.getElementById("otpStatus");
 const confirmBookingBtn = document.getElementById("confirmBookingBtn");
 
@@ -83,23 +88,35 @@ function startOtpCooldown(seconds) {
 function resetEmailVerificationUI() {
     sessionStorage.removeItem("emailVerificationToken");
     sessionStorage.removeItem("emailVerifiedFor");
+    sessionStorage.removeItem("pi360Name");
+    sessionStorage.removeItem("pi360Email");
+    sessionStorage.removeItem("studentDept");
     setBookingEnabled(false);
+    if (nameInput) {
+        nameInput.value = "";
+        nameInput.disabled = true;
+    }
+    if (emailInput) {
+        emailInput.value = "";
+        emailInput.disabled = true;
+    }
+    if (pi360IdInput) {
+        pi360IdInput.value = "";
+        pi360IdInput.disabled = false;
+    }
+    if (pi360PassInput) {
+        pi360PassInput.value = "";
+        pi360PassInput.disabled = false;
+    }
+    if (pi360LoginBtn) {
+        pi360LoginBtn.disabled = false;
+        pi360LoginBtn.textContent = "Login with PI-360";
+    }
+    if (pi360LoginSection) pi360LoginSection.style.display = "block";
+
     if (otpInput) otpInput.value = "";
-    if (sendOtpBtn) {
-        // Disable until email is valid
-        const email = normalizeEmail(emailInput?.value);
-        sendOtpBtn.disabled = !isAllowedCollegeEmail(email);
-        sendOtpBtn.textContent = "Send OTP";
-    }
     clearOtpCooldown();
-    const email = normalizeEmail(emailInput?.value);
-    if (!email) {
-        setOtpStatus("");
-    } else if (!isAllowedCollegeEmail(email)) {
-        setOtpStatus("Only official college email IDs are allowed for booking.", "error");
-    } else {
-        setOtpStatus("Email not verified.");
-    }
+    setOtpStatus("Login required. Please authenticate with PI-360 to continue.", "info");
 }
 
 let selectedSlot = "";
@@ -318,106 +335,83 @@ backToCourtsBtn.addEventListener("click", () => {
     resetEmailVerificationUI();
 });
 
-// OTP UI init + handlers
+// PI-360 login UI init + handlers
 resetEmailVerificationUI();
-if (emailInput) {
-    emailInput.addEventListener("input", () => {
-        resetEmailVerificationUI();
-    });
-}
 
-if (sendOtpBtn) {
-    sendOtpBtn.addEventListener("click", async () => {
-        const email = normalizeEmail(emailInput?.value);
-        if (!email) {
-            setOtpStatus("Please enter your email first.", "error");
+if (pi360LoginBtn) {
+    pi360LoginBtn.addEventListener("click", async () => {
+        const id = String(pi360IdInput?.value || "").trim();
+        const password = String(pi360PassInput?.value || "").trim();
+
+        if (!id) {
+            setOtpStatus("Please enter your PI-360 student ID.", "error");
             return;
         }
-        if (!isAllowedCollegeEmail(email)) {
-            setOtpStatus("Only official college email IDs are allowed for booking.", "error");
+        if (!password) {
+            setOtpStatus("Please enter your PI-360 password.", "error");
             return;
         }
 
-        setOtpStatus("Sending OTP...", "info");
-        sendOtpBtn.disabled = true;
+        pi360LoginBtn.disabled = true;
+        setOtpStatus("Authenticating with PI-360...", "info");
 
         try {
-            const res = await fetch(`${API_URL}/send-otp`, {
+            const res = await fetch(`${API_URL}/pi360/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ id, password })
             });
 
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                const retry = Number(data.retryAfterSeconds || 0);
-                if (res.status === 429 && retry > 0) {
-                    setOtpStatus(`Please wait ${retry}s before requesting another OTP.`, "error");
-                    startOtpCooldown(retry);
-                    return;
-                }
-                setOtpStatus(data.error || "Failed to send OTP.", "error");
-                sendOtpBtn.disabled = false;
-                sendOtpBtn.textContent = "Send OTP";
-                return;
-            }
-
-            setOtpStatus("OTP sent. Check your email (valid for 5 minutes).", "success");
-            startOtpCooldown(Number(data.cooldownSeconds || 60));
-        } catch (e) {
-            setOtpStatus("Network error while sending OTP.", "error");
-            sendOtpBtn.disabled = false;
-            sendOtpBtn.textContent = "Send OTP";
-        }
-    });
-}
-
-if (verifyOtpBtn) {
-    verifyOtpBtn.addEventListener("click", async () => {
-        const email = normalizeEmail(emailInput?.value);
-        const otp = String(otpInput?.value || "").trim();
-
-        if (!email) {
-            setOtpStatus("Please enter your email first.", "error");
-            return;
-        }
-        if (!isAllowedCollegeEmail(email)) {
-            setOtpStatus("Please use your college email.", "error");
-            return;
-        }
-        if (!/^\d{6}$/.test(otp)) {
-            setOtpStatus("Please enter the 6-digit OTP.", "error");
-            return;
-        }
-
-        verifyOtpBtn.disabled = true;
-        setOtpStatus("Verifying OTP...", "info");
-
-        try {
-            const res = await fetch(`${API_URL}/verify-otp`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, otp })
-            });
-
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok || !data.token) {
-                setOtpStatus(data.error || "OTP verification failed.", "error");
+            if (!res.ok || !data?.token || !data?.user?.email) {
+                setOtpStatus(data?.error || "PI-360 login failed.", "error");
                 setBookingEnabled(false);
-                verifyOtpBtn.disabled = false;
+                pi360LoginBtn.disabled = false;
                 return;
             }
 
+            const user = data.user || {};
+            const bookingEmail = normalizeEmail(user.email);
+            if (!isAllowedCollegeEmail(bookingEmail)) {
+                setOtpStatus("PI-360 returned an email that is not allowed for booking.", "error");
+                setBookingEnabled(false);
+                pi360LoginBtn.disabled = false;
+                return;
+            }
+
+            // Keep existing booking gate behavior unchanged by using the same token keys.
             sessionStorage.setItem("emailVerificationToken", data.token);
-            sessionStorage.setItem("emailVerifiedFor", email);
-            setOtpStatus("Email verified. You can confirm booking now.", "success");
+            sessionStorage.setItem("emailVerifiedFor", bookingEmail);
+            sessionStorage.setItem("pi360Name", String(user.name || "").trim());
+            sessionStorage.setItem("pi360Email", bookingEmail);
+            sessionStorage.setItem("studentDept", String(user.dept || "").trim());
+
+            if (nameInput) {
+                nameInput.value = String(user.name || "").trim();
+                nameInput.disabled = true;
+            }
+            if (emailInput) {
+                emailInput.value = bookingEmail;
+                emailInput.disabled = true;
+            }
+
+            if (pi360IdInput) pi360IdInput.disabled = true;
+            if (pi360PassInput) pi360PassInput.disabled = true;
+            if (pi360LoginSection) pi360LoginSection.style.display = "none";
+
+            setOtpStatus("PI-360 login successful. You can confirm booking now.", "success");
             setBookingEnabled(true);
-            verifyOtpBtn.disabled = false;
         } catch (e) {
-            setOtpStatus("Network error while verifying OTP.", "error");
+            setOtpStatus("Network error while contacting PI-360.", "error");
             setBookingEnabled(false);
-            verifyOtpBtn.disabled = false;
+            pi360LoginBtn.disabled = false;
         }
+    });
+}
+
+if (pi360PassInput) {
+    pi360PassInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") pi360LoginBtn?.click();
     });
 }
 
@@ -554,7 +548,7 @@ bookingForm.addEventListener("submit", async (e) => {
     const verificationToken = sessionStorage.getItem("emailVerificationToken");
 
     if (!verificationToken || !verifiedFor || verifiedFor !== bookingEmail) {
-        alert("Please verify your email with OTP before confirming the booking.");
+        alert("Please login with PI-360 before confirming the booking.");
         return;
     }
 
@@ -594,6 +588,7 @@ bookingForm.addEventListener("submit", async (e) => {
         endTime: "",
         studentName: document.getElementById("nameInput").value,
         studentEmail: document.getElementById("emailInput").value,
+        studentDept: sessionStorage.getItem("studentDept") || "",
         teamMembers: document.getElementById("teamMembers")?.value || "",
         status: "pending"
     };

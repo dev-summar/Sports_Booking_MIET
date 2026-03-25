@@ -992,6 +992,35 @@
                 </div>
               </div>
 
+              <!-- PI-360 Login Gate -->
+              <div id="pi360LoginSection">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Login (PI-360)
+                </label>
+                <div class="flex gap-3">
+                  <input type="text"
+                         id="pi360IdInput"
+                         class="form-input flex-1"
+                         placeholder="Email"
+                         inputmode="email"
+                         autocomplete="username"
+                         required />
+                  <input type="password"
+                         id="pi360PassInput"
+                         class="form-input flex-1"
+                         placeholder="password"
+                         autocomplete="current-password"
+                         required />
+                </div>
+
+                <div class="flex items-center gap-3 mt-3">
+                  <button type="button" id="pi360LoginBtn" class="btn-secondary whitespace-nowrap">
+                    Login with PI-360
+                  </button>
+                  <p id="otpStatus" class="text-xs text-gray-600"></p>
+                </div>
+              </div>
+
               <!-- Name -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -1000,8 +1029,8 @@
                 <input type="text"
                        id="nameInput"
                        class="form-input"
-                       placeholder="Enter your full name"
-                       required />
+                       placeholder="Loading from PI-360..."
+                       disabled />
               </div>
 
               <!-- Email -->
@@ -1009,35 +1038,11 @@
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                   Student Email
                 </label>
-                <div class="flex gap-3">
-                  <input type="email"
-                         id="emailInput"
-                         class="form-input flex-1"
-                         placeholder="yourid@mietjammu.in"
-                         required />
-                  <button type="button" id="sendOtpBtn" class="btn-secondary whitespace-nowrap">
-                    Send OTP
-                  </button>
-                </div>
-                <p id="otpStatus" class="text-xs mt-2 text-gray-600"></p>
-              </div>
-
-              <!-- OTP -->
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  OTP
-                </label>
-                <div class="flex gap-3">
-                  <input type="text"
-                         id="otpInput"
-                         class="form-input flex-1"
-                         placeholder="Enter 6-digit OTP"
-                         inputmode="numeric"
-                         autocomplete="one-time-code" />
-                  <button type="button" id="verifyOtpBtn" class="btn-secondary whitespace-nowrap">
-                    Verify OTP
-                  </button>
-                </div>
+                <input type="email"
+                       id="emailInput"
+                       class="form-input"
+                       placeholder="Loading from PI-360..."
+                       disabled />
               </div>
 
               <!-- Team Members -->

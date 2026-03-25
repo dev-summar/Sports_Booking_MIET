@@ -9,6 +9,10 @@ const BookingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    studentDept: {
+        type: String,
+        default: ""
+    },
     courtId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Court",

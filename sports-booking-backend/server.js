@@ -33,6 +33,7 @@ app.get("/", (req, res) => {
 app.use("/api/courts", require("./routes/courts"));
 app.use("/api/bookings", require("./routes/bookings"));
 app.use("/api/admin", require("./routes/adminAuth"));
+app.use("/api", require("./routes/pi360Auth"));
 
 
 
