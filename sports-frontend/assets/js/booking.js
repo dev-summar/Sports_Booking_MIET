@@ -90,12 +90,13 @@ bookingForm.addEventListener("submit", async (e) => {
 
     const result = await res.json();
 
-    if (result._id) {
+    if (res.ok && result._id) {
         responseMsg.textContent = "🎉 Booking Successful! Wait for admin approval.";
         responseMsg.classList = "text-green-600 text-center";
         loadBookedSlots();  // refresh slots
     } else {
-        responseMsg.textContent = "❌ Booking failed.";
+        const err = typeof result.error === "string" ? result.error.trim() : "";
+        responseMsg.textContent = err || "❌ Booking failed.";
         responseMsg.classList = "text-red-600 text-center";
     }
 });

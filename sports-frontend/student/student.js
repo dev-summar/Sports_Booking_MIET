@@ -33,8 +33,40 @@ const pi360LoginBtn = document.getElementById("pi360LoginBtn");
 const pi360LoginSection = document.getElementById("pi360LoginSection");
 const otpStatus = document.getElementById("otpStatus");
 const confirmBookingBtn = document.getElementById("confirmBookingBtn");
+const bookingThankYouModal = document.getElementById("bookingThankYouModal");
+const bookingThankYouBackdrop = document.getElementById("bookingThankYouBackdrop");
+const bookingThankYouCloseBtn = document.getElementById("bookingThankYouCloseBtn");
 
 let otpCooldownInterval = null;
+
+function openBookingThankYouModal() {
+    if (!bookingThankYouModal) return;
+    bookingThankYouModal.classList.remove("hidden");
+    bookingThankYouModal.classList.add("flex");
+    bookingThankYouModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    if (bookingThankYouCloseBtn) bookingThankYouCloseBtn.focus();
+}
+
+function closeBookingThankYouModal() {
+    if (!bookingThankYouModal) return;
+    bookingThankYouModal.classList.add("hidden");
+    bookingThankYouModal.classList.remove("flex");
+    bookingThankYouModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+}
+
+if (bookingThankYouBackdrop) {
+    bookingThankYouBackdrop.addEventListener("click", closeBookingThankYouModal);
+}
+if (bookingThankYouCloseBtn) {
+    bookingThankYouCloseBtn.addEventListener("click", closeBookingThankYouModal);
+}
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && bookingThankYouModal && !bookingThankYouModal.classList.contains("hidden")) {
+        closeBookingThankYouModal();
+    }
+});
 
 function normalizeEmail(email) {
     return String(email || "").trim().toLowerCase();
@@ -604,22 +636,26 @@ bookingForm.addEventListener("submit", async (e) => {
         });
 
         if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            const serverMsg = typeof data.error === "string" ? data.error.trim() : "";
             if (res.status === 403) {
-                const data = await res.json().catch(() => ({}));
                 responseMsg.innerHTML =
-                    data.error || "Bookings are temporarily disabled by admin. Please try later.";
-                responseMsg.className = "bg-red-50 border-2 border-red-200 text-red-700";
-                responseMsg.style.display = "block";
-                return;
+                    serverMsg || "Bookings are temporarily disabled by admin. Please try later.";
+            } else {
+                responseMsg.innerHTML =
+                    serverMsg || "❌ Booking failed. Please try again.";
             }
-            throw new Error("Booking failed");
+            responseMsg.className = "bg-red-50 border-2 border-red-200 text-red-700";
+            responseMsg.style.display = "block";
+            return;
         }
 
-        // Success message
+        // Success message + thank-you modal
         responseMsg.innerHTML = "🎉 Booking Successful! Wait for admin approval.";
         responseMsg.className = "bg-green-50 border-2 border-green-200 text-green-700";
         responseMsg.style.display = "block";
 
+        openBookingThankYouModal();
         loadBookedSlots();
     } catch (error) {
         // Error message

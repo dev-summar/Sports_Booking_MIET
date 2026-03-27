@@ -190,6 +190,76 @@
       transform: none;
     }
 
+    /* Thank-you modal (after successful booking) */
+    .booking-thankyou-modal {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .booking-thankyou-modal__backdrop {
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .booking-thankyou-modal__panel {
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      box-shadow:
+        0 25px 50px -12px rgba(15, 23, 42, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+      animation: bookingThankYouIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes bookingThankYouIn {
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .booking-thankyou-emoji {
+      font-size: clamp(1.75rem, 5vw, 2.5rem);
+      line-height: 1.2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      letter-spacing: 0.02em;
+    }
+
+    .booking-thankyou-emoji span {
+      display: inline-block;
+      animation: bookingThankYouPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .booking-thankyou-emoji span:nth-child(1) { animation-delay: 0.05s; }
+    .booking-thankyou-emoji span:nth-child(2) { animation-delay: 0.12s; }
+    .booking-thankyou-emoji span:nth-child(3) { animation-delay: 0.19s; }
+    .booking-thankyou-emoji span:nth-child(4) { animation-delay: 0.26s; }
+    .booking-thankyou-emoji span:nth-child(5) { animation-delay: 0.33s; }
+
+    @keyframes bookingThankYouPop {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.6);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .booking-thankyou-modal .btn-primary {
+      width: auto;
+      min-width: 200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     /* Info message box - premium styling */
     .info-box {
       background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
@@ -1072,6 +1142,44 @@
       </div>
     </div>
   </main>
+
+  <!-- Thank you modal (shown after successful booking) -->
+  <div
+    id="bookingThankYouModal"
+    class="booking-thankyou-modal fixed inset-0 z-[100] hidden items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="bookingThankYouTitle"
+    aria-hidden="true"
+  >
+    <button
+      type="button"
+      class="booking-thankyou-modal__backdrop absolute inset-0 cursor-default border-0 p-0"
+      id="bookingThankYouBackdrop"
+      aria-label="Close dialog"
+    ></button>
+    <div
+      class="booking-thankyou-modal__panel relative z-10 w-full max-w-md rounded-3xl px-8 py-10 text-center"
+    >
+      <div class="booking-thankyou-emoji mb-5" aria-hidden="true">
+        <span>🎉</span>
+        <span>⚽</span>
+        <span>🏆</span>
+        <span>✨</span>
+        <span>💙</span>
+      </div>
+      <h2 id="bookingThankYouTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
+        Thank you!
+      </h2>
+      <p class="text-gray-600 text-sm sm:text-base leading-relaxed mb-8">
+        Your booking request was submitted successfully. Our team will review it — please wait for admin approval.
+      </p>
+      <button type="button" class="btn-primary" id="bookingThankYouCloseBtn">
+        <span>Got it</span>
+        <span>👍</span>
+      </button>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer class="bg-white border-t border-gray-200 mt-12 shadow-sm">

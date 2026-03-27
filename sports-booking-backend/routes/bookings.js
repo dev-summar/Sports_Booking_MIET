@@ -83,6 +83,20 @@ router.post("/add", async (req, res) => {
       }
     }
 
+    // Per-day booking cap per email (exclude rejected entries from counting).
+    const DAILY_BOOKING_LIMIT_PER_EMAIL = 2;
+    const existingBookingsCount = await Booking.countDocuments({
+      studentEmail: bodyEmail,
+      date,
+      status: { $ne: "rejected" }
+    });
+
+    if (existingBookingsCount >= DAILY_BOOKING_LIMIT_PER_EMAIL) {
+      return res.status(400).json({
+        error: "Only 2 bookings allowed per day."
+      });
+    }
+
     const booking = await Booking.create(req.body);
     console.log("NEW BOOKING CREATED:", booking);
 
